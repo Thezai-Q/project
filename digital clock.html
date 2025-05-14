@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Digital Clock with Lunar Eclipse and Aurora</title>
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: Arial, sans-serif;
+            transition: background-color 1s ease;
+            overflow: hidden;
+        }
+
+        .container {
+            text-align: center;
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+
+        .sky {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        .sun,
+        .moon {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            transition: transform 1s ease-in-out;
+            z-index: 5;
+            left: 50%;
+        }
+
+        .sun {
+            background-color: #ffd700;
+            box-shadow: 0 0 20px #ffd700;
+        }
+
+        .moon {
+            background-color: #fff;
+            box-shadow: 0 0 20px #fff;
+            z-index: 5;
+            left: 50%;
+        }
+
+        .moon.lunar-eclipse {
+            background-color: #8B0000;
+            box-shadow: 0 0 15px rgba(139, 0, 0, 0.5), 0 0 30px rgba(139, 0, 0, 0.3);
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .clock {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            gap: 10px;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 10;
+        }
+
+        .time-box {
+            width: 60px;
+            height: 60px;
+            background-color: #2a2a2a;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #00b7ff;
+            border-radius: 5px;
+            box-shadow: 0 0 10px #00b7ff, 0 0 20px #00b7ff;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .time-box.small {
+            width: 40px;
+            height: 40px;
+            font-size: 1rem;
+        }
+
+        .digit-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+
+        .digit {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: transform 0.3s ease-in-out;
+        }
+
+        .digit.old {
+            transform: translateY(0);
+        }
+
+        .digit.new {
+            transform: translateY(-100%);
+        }
+
+        .digit.old.animate {
+            transform: translateY(100%);
+        }
+
+        .digit.new.animate {
+            transform: translateY(0);
+        }
+
+        .colon {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #00b7ff;
+            margin: 0 5px;
+        }
+
+        .seasonal-effects {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 2;
+        }
+
+        .effect {
+            position: absolute;
+            will-change: transform, opacity;
+        }
+
+        .snow {
+            width: 16px;
+            height: 16px;
+            background: linear-gradient(135deg, #ffffff, #d0e8ff);
+            clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%,
+                    50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+            opacity: 0.9;
+            box-shadow: 0 0 6px rgba(255, 255, 255, 0.7);
+            animation: fall linear forwards;
+        }
+
+        .petal {
+            width: 12px;
+            height: 20px;
+            background: linear-gradient(135deg, #ffb6c1, #ff69b4);
+            clip-path: ellipse(40% 50% at 50% 50%);
+            opacity: 0.85;
+            box-shadow: 0 0 5px rgba(255, 105, 180, 0.3);
+            animation: fall linear forwards;
+        }
+
+        .rain {
+            width: 2px;
+            height: 25px;
+            background-color: #99ccff;
+            opacity: 0.7;
+            animation: rainFall linear forwards;
+        }
+
+        .leaf {
+            width: 14px;
+            height: 14px;
+            background: linear-gradient(135deg, #cc6600, #ff9900);
+            clip-path: polygon(50% 0%, 80% 20%, 100% 50%, 80% 80%, 50% 100%,
+                    20% 80%, 0% 50%, 20% 20%);
+            opacity: 0.8;
+            animation: fall linear forwards;
+        }
+
+        .aurora {
+            position: absolute;
+            top: 0;
+            width: 100%;
+            height: 200px;
+            background: linear-gradient(to bottom,
+                    rgba(0, 255, 128, 0.3),
+                    rgba(0, 191, 255, 0.3),
+                    rgba(128, 0, 128, 0.3),
+                    transparent);
+            opacity: 0;
+            animation: auroraFade 5s ease-in-out infinite alternate;
+            z-index: 3;
+        }
+
+        @keyframes fall {
+            0% {
+                transform: translateY(-100px) translateX(0) rotate(0deg);
+                opacity: 1;
+            }
+
+            100% {
+                transform: translateY(100vh) translateX(50px) rotate(720deg);
+                opacity: 0;
+            }
+        }
+
+        @keyframes rainFall {
+            0% {
+                transform: translateY(-100px);
+                opacity: 1;
+            }
+
+            100% {
+                transform: translateY(100vh);
+                opacity: 0;
+            }
+        }
+
+        @keyframes auroraFade {
+            0% {
+                opacity: 0.3;
+                transform: translateY(0);
+            }
+
+            100% {
+                opacity: 0.6;
+                transform: translateY(20px);
+            }
+        }
+
+        .footer {
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="sky">
+            <div class="sun" id="sun"></div>
+            <div class="moon hidden" id="moon"></div>
+        </div>
+        <div class="seasonal-effects" id="seasonal-effects"></div>
+        <div class="clock">
+            <div class="time-box" id="hours1">
+                <div class="digit-container">
+                    <div class="digit old" id="hours1-old">0</div>
+                    <div class="digit new" id="hours1-new">0</div>
+                </div>
+            </div>
+            <div class="time-box" id="hours2">
+                <div class="digit-container">
+                    <div class="digit old" id="hours2-old">0</div>
+                    <div class="digit new" id="hours2-new">0</div>
+                </div>
+            </div>
+            <span class="colon">:</span>
+            <div class="time-box" id="minutes1">
+                <div class="digit-container">
+                    <div class="digit old" id="minutes1-old">0</div>
+                    <div class="digit new" id="minutes1-new">0</div>
+                </div>
+            </div>
+            <div class="time-box" id="minutes2">
+                <div class="digit-container">
+                    <div class="digit old" id="minutes2-old">0</div>
+                    <div class="digit new" id="minutes2-new">0</div>
+                </div>
+            </div>
+            <span class="colon">:</span>
+            <div class="time-box" id="seconds1">
+                <div class="digit-container">
+                    <div class="digit old" id="seconds1-old">0</div>
+                    <div class="digit new" id="seconds1-new">0</div>
+                </div>
+            </div>
+            <div class="time-box" id="seconds2">
+                <div class="digit-container">
+                    <div class="digit old" id="seconds2-old">0</div>
+                    <div class="digit new" id="seconds2-new">0</div>
+                </div>
+            </div>
+            <div class="time-box small" id="period">
+                <div class="digit-container">
+                    <div class="digit old" id="period-old">AM</div>
+                    <div class="digit new" id="period-new">AM</div>
+                </div>
+            </div>
+        </div>
+        <div class="footer"></div>
+    </div>
+    <script>
+        let currentSeason = null;
+        let auroraActive = false;
+        let auroraEndTime = null;
+        let lastCheckedDate = null;
+
+        function checkAurora(now) {
+            const today = now.toDateString();
+            const hours = now.getHours();
+
+            if (lastCheckedDate !== today) {
+                lastCheckedDate = today;
+                if (Math.random() < 0.2) {
+                    const auroraStartHour = Math.floor(Math.random() * 6) + 18;
+                    auroraActive = true;
+                    auroraEndTime = new Date(now);
+                    auroraEndTime.setHours(auroraStartHour + 1, 0, 0, 0);
+                    auroraEndTime.setTime(auroraEndTime.getTime() - 3600000);
+                } else {
+                    auroraActive = false;
+                    auroraEndTime = null;
+                }
+            }
+
+            if (auroraActive && now.getTime() >= auroraEndTime - 3600000 && now.getTime() <= auroraEndTime) {
+                return true;
+            }
+            return false;
+        }
+
+        function updateClock() {
+            const now = new Date();
+            let hours = now.getHours();
+            let minutes = now.getMinutes();
+            let seconds = now.getSeconds();
+            const period = hours >= 12 ? 'PM' : 'AM';
+            hours = hours % 12 || 12;
+
+            const h = hours.toString().padStart(2, '0');
+            const m = minutes.toString().padStart(2, '0');
+            const s = seconds.toString().padStart(2, '0');
+
+            animateDigit('hours1', h[0]);
+            animateDigit('hours2', h[1]);
+            animateDigit('minutes1', m[0]);
+            animateDigit('minutes2', m[1]);
+            animateDigit('seconds1', s[0]);
+            animateDigit('seconds2', s[1]);
+            animateDigit('period', period);
+
+            updateSunMoonAndEffects(now);
+        }
+
+        function animateDigit(id, newValue) {
+            const oldDigit = document.getElementById(`${id}-old`);
+            const newDigit = document.getElementById(`${id}-new`);
+            if (oldDigit.textContent !== newValue) {
+                newDigit.textContent = newValue;
+                oldDigit.classList.add('animate');
+                newDigit.classList.add('animate');
+                setTimeout(() => {
+                    oldDigit.textContent = newValue;
+                    oldDigit.classList.remove('animate');
+                    newDigit.classList.remove('animate');
+                    newDigit.style.transform = 'translateY(-100%)';
+                }, 300);
+            }
+        }
+
+        function updateSunMoonAndEffects(now) {
+            const month = now.getMonth();
+            const hours = now.getHours();
+            const minutes = now.getMinutes();
+            const isDay = hours >= 6 && hours < 18;
+            const isLunarEclipse = !isDay && minutes === 0;
+            const isAurora = checkAurora(now);
+
+            const sun = document.getElementById('sun');
+            const moon = document.getElementById('moon');
+            const body = document.body;
+            const effects = document.getElementById('seasonal-effects');
+
+            let season, color, effectType;
+            if (month >= 2 && month <= 4) {
+                season = 'spring'; color = '#d4e4d4'; effectType = 'petal';
+            } else if (month >= 5 && month <= 7) {
+                season = 'summer'; color = '#f9e4b7'; effectType = 'rain';
+            } else if (month >= 8 && month <= 10) {
+                season = 'autumn'; color = '#e8b923'; effectType = 'leaf';
+            } else {
+                season = 'winter'; color = '#d6e6f2'; effectType = 'snow';
+            }
+
+            if (currentSeason !== season) {
+                currentSeason = season;
+                effects.innerHTML = '';
+            }
+
+            if (isAurora && !isDay) {
+                let aurora = document.querySelector('.aurora');
+                if (!aurora) {
+                    aurora = document.createElement('div');
+                    aurora.className = 'aurora';
+                    effects.appendChild(aurora);
+                }
+            } else {
+                const aurora = document.querySelector('.aurora');
+                if (aurora) aurora.remove();
+            }
+
+            if (isLunarEclipse) {
+                sun.classList.add('hidden');
+                moon.classList.remove('hidden');
+                moon.classList.add('lunar-eclipse');
+                body.style.backgroundColor = '#0f0f1a';
+            } else {
+                sun.classList.toggle('hidden', !isDay);
+                moon.classList.toggle('hidden', isDay);
+                moon.classList.remove('lunar-eclipse');
+                body.style.backgroundColor = isDay ? color : '#1a1a2e';
+            }
+
+            const progress = isDay
+                ? (hours - 6 + minutes / 60) / 12
+                : ((hours < 6 ? hours + 24 : hours) - 18 + minutes / 60) / 12;
+            const xPos = Math.sin(progress * Math.PI) * 40; // Increased horizontal range
+            const yPos = Math.cos(progress * Math.PI) * 30; // Vertical arc
+            const target = isDay ? sun : moon;
+            target.style.transform = `translate(calc(-50% + ${xPos}vw), calc(${yPos}vh - 10vh))`;
+
+            for (let i = 0; i < 3; i++) {
+                if (Math.random() < 0.6) {
+                    const el = document.createElement('div');
+                    el.className = `effect ${effectType}`;
+                    el.style.left = `${Math.random() * 100}%`;
+                    el.style.animationDuration = `${Math.random() * 4 + 4}s`;
+
+                    if (effectType === 'petal') {
+                        const shade = Math.random() * 20 - 10;
+                        el.style.background = `linear-gradient(135deg, rgb(${255 + shade}, ${182 + shade}, ${193 + shade}), rgb(${255 + shade}, ${105 + shade}, ${180 + shade}))`;
+                        const scale = Math.random() * 0.5 + 0.75;
+                        el.style.transform = `scale(${scale})`;
+                    }
+
+                    effects.appendChild(el);
+                    el.addEventListener('animationend', () => el.remove());
+                }
+            }
+        }
+
+        setInterval(updateClock, 1000);
+        updateClock();
+    </script>
+</body>
+
+</html>
